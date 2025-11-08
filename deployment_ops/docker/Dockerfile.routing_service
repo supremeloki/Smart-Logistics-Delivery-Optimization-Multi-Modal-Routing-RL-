@@ -1,0 +1,43 @@
+# Use an official lightweight Python image
+FROM python:3.9-slim-buster
+
+WORKDIR /app
+
+# Install system dependencies for osmnx (geospatial)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libxml2-dev \
+    libxslt-dev \
+    curl \
+    git \
+    graphviz \
+    libspatialindex-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only requirements first
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire application code
+COPY . .
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV ENV_CONFIG_PATH=/app/conf/environments/prod.yaml
+ENV OSM_PROCESSING_CONFIG_PATH=/app/conf/osm_processing_config.yaml
+ENV ROUTING_CONFIG_PATH=/app/conf/routing_engine_config.yaml
+
+# Ensure graph data directory exists and preprocess graph if not present
+RUN mkdir -p /app/data_nexus/road_network_graph
+# This step is heavy; in production, pre-baked image with graph or volume mount is preferred
+# For robustness, we can try to generate it if missing, but it's very slow in Docker build
+# RUN python src/graph_routing_engine/osmnx_processor.py --config $OSM_PROCESSING_CONFIG_PATH
+
+# Expose port for the routing API
+EXPOSE 8080
+
+# Command to run the FastAPI routing service
+# Note: The `optimization_api.py` serves both routing and RL optimization
+# This Dockerfile can either run the main API or a dedicated routing API if split.
+# Assuming optimization_api.py handles /route.
+CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8080"]

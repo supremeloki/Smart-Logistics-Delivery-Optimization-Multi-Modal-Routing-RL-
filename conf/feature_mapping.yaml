@@ -1,0 +1,14 @@
+
+observation_features:
+  driver_policy:
+    0: "current_node_id"
+    1: "current_load_kg"
+    2: "driver_status_available"
+    3: "driver_speed_mps"
+    4: "order_1_origin_node"
+    5: "order_1_destination_node"
+    6: "order_1_weight"
+    7: "order_1_pickup_deadline_relative"
+    8: "order_1_delivery_deadline_relative"
+    9: "traffic_factor_avg_near_driver"
+    10: "demand_density_near_driver"

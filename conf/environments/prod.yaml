@@ -1,0 +1,28 @@
+environments:
+  prod:
+    monitoring:
+      prometheus:
+        enabled: false
+        port: 8000
+        job_name: logistics_prod_service
+    database:
+      host: logistics-db-prod
+      port: 5432
+      user: prod_user
+      password: ${{ secrets.DB_PASSWORD_PROD }}
+      dbname: logistics_prod
+    redis:
+      host: logistics-redis-prod
+      port: 6379
+      db: 0
+    kafka:
+      bootstrap_servers: ['kafka-broker-1:9092', 'kafka-broker-2:9092']
+      topic_traffic_data: prod_traffic_events
+      topic_order_data: prod_order_events
+    routing_engine:
+      api_endpoint: http://routing-service:8080/route
+      osmnx_cache_dir: /app/data/road_network_graph/
+    rl_agent:
+      inference_endpoint: http://rl-agent-service:8001/predict
+      model_version: prod_v2.1
+      explore_probability: 0.05

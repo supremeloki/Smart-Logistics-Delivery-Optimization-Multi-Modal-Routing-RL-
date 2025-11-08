@@ -1,0 +1,30 @@
+algorithm: PPO
+framework: torch
+multi_agent_config:
+  policies:
+    driver_policy:
+      agent_types: [driver]
+      obs_space: [128]
+      action_space: [5]
+    fleet_manager_policy:
+      agent_types: [dispatcher]
+      obs_space: [256]
+      action_space: [10]
+  policy_mapping_fn:
+    type: custom
+    module: src.agent_brains.multi_agent_rl_policy
+    function: map_agent_to_policy
+training_params:
+  gamma: 0.99
+  lr: 0.0001
+  num_workers: 4
+  sgd_minibatch_size: 256
+  train_batch_size: 4000
+  model:
+    fcnet_hiddens: [256, 256]
+    vf_share_layers: true
+    use_lstm: false
+  exploration_config:
+    type: EpsilonGreedy
+    epsilon_timesteps: 200000
+    final_epsilon: 0.01

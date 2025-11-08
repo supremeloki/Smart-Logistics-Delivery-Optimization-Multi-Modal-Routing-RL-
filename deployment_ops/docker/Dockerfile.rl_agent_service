@@ -1,0 +1,45 @@
+# Use a slim NVIDIA CUDA base image for PyTorch with GPU support
+FROM nvcr.io/nvidia/pytorch:23.08-py3
+
+WORKDIR /app
+
+# Install system dependencies if any, e.g., for geospatial libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libxml2-dev \
+    libxslt-dev \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application
+COPY . .
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV SUMO_HOME=/usr/share/sumo 
+ENV KMP_DUPLICATE_LIB_OK=TRUE 
+ENV ENV_CONFIG_PATH=/app/conf/environments/prod.yaml
+ENV GNN_MODEL_PATH=/app/rl_model_registry/gcn_model.pth
+ENV RL_CHECKPOINT_PATH=/app/rl_model_registry/prod_v2.1/checkpoint_000500
+
+# Expose port for FastAPI or Triton inference server
+EXPOSE 8001
+
+# Command to run the Triton Inference Server with RL Agent and GNN models
+# This assumes Triton server is installed in the base image or separately
+# and that `model_repo` contains the exported models for Triton.
+# If using TorchServe, the command would be different.
+
+# Example with Triton:
+# Entrypoint would typically be triton's start script.
+# This Dockerfile focuses on building the environment.
+# Triton inference server itself is usually run in a separate container.
+# This container could host the FastAPI optimization_api, which then calls Triton.
+
+# For direct FastAPI deployment:
+CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8001"]

@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093" # Internal port for inter-broker communication
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: logistics_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  graphhopper:
+    image: graphhopper/graphhopper:latest
+    container_name: graphhopper
+    hostname: graphhopper
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./graphhopper_data:/data
+    environment:
+      JAVA_OPTS: "-Xmx10g -Xms1g" # Adjust based on RAM available for GraphHopper
+    command: ["java", "-Ddw.server.applicationConnectors[0].port=8989", "-jar", "graphhopper-web-*.jar", "server", "config.yml"]
+
+  # RL Agent Service
+  rl-agent-service:
+    build:
+      context: .
+      dockerfile: deployment_ops/docker/Dockerfile.rl_agent_service
+    container_name: rl-agent-service
+    hostname: rl-agent-service
+    ports:
+      - "8001:8001"
+    environment:
+      ENV_CONFIG_PATH: /app/conf/environments/dev.yaml
+      # GNN_MODEL_PATH and RL_CHECKPOINT_PATH will be copied during build or mounted
+    volumes:
+      - ./conf/environments/dev.yaml:/app/conf/environments/dev.yaml
+      - ./conf/rl_agent_params.yaml:/app/conf/rl_agent_params.yaml
+      - ./conf/routing_engine_config.yaml:/app/conf/routing_engine_config.yaml # For AStar fallback
+      - ./data_nexus/road_network_graph:/app/data_nexus/road_network_graph
+      - ./rl_model_registry:/app/rl_model_registry
+    depends_on:
+      - redis
+      - postgres
+      - kafka
+
+  # Routing Service (uses the same API as RL agent service, just different port/focus)
+  # This can be a separate deployment if desired, but for dev, we can point to same API
+  routing-service:
+    build:
+      context: .
+      dockerfile: deployment_ops/docker/Dockerfile.routing_service
+    container_name: routing-service
+    hostname: routing-service
+    ports:
+      - "8080:8080"
+    environment:
+      ENV_CONFIG_PATH: /app/conf/environments/dev.yaml
+      ROUTING_CONFIG_PATH: /app/conf/routing_engine_config.yaml
+      OSM_PROCESSING_CONFIG_PATH: /app/conf/osm_processing_config.yaml
+    volumes:
+      - ./conf/environments/dev.yaml:/app/conf/environments/dev.yaml
+      - ./conf/routing_engine_config.yaml:/app/conf/routing_engine_config.yaml
+      - ./conf/osm_processing_config.yaml:/app/conf/osm_processing_config.yaml
+      - ./data_nexus/road_network_graph:/app/data_nexus/road_network_graph
+    depends_on:
+      - redis
+      - postgres
+      - graphhopper
+
+  # Kafka Producer Simulator
+  kafka-producer-sim:
+    build:
+      context: .
+      dockerfile: deployment_ops/docker/Dockerfile.kafka_producer_sim # Need to create this Dockerfile
+    container_name: kafka-producer-sim
+    hostname: kafka-producer-sim
+    volumes:
+      - ./conf/environments/dev.yaml:/app/conf/environments/dev.yaml
+      - ./conf/osm_processing_config.yaml:/app/conf/osm_processing_config.yaml
+      - ./data_nexus/road_network_graph:/app/data_nexus/road_network_graph
+    depends_on:
+      - kafka
+
+  # Spark Kafka Consumer
+  spark-kafka-consumer:
+    build:
+      context: .
+      dockerfile: deployment_ops/docker/Dockerfile.spark_kafka_consumer # Need to create this Dockerfile
+    container_name: spark-kafka-consumer
+    hostname: spark-kafka-consumer
+    volumes:
+      - ./conf/environments/dev.yaml:/app/conf/environments/dev.yaml
+      - ./data_nexus/spark_checkpoints:/app/data_nexus/spark_checkpoints
+    depends_on:
+      - kafka
+      - redis
+      - postgres
+
+volumes:
+  postgres_data:
+  graphhopper_data: # Make sure to download a PBF for GraphHopper in this folder

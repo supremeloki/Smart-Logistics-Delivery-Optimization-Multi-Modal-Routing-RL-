@@ -1,0 +1,20 @@
+graphhopper:
+  host: http://localhost:8989/
+  api_key: your_graphhopper_api_key
+  profile: car
+  instructions: true
+  calc_points: true
+valhalla:
+  host: http://localhost:8002/
+  costing: auto
+  format: json
+osmnx:
+  graph_type: drive
+  network_type: drive_service
+  clean_periphery: true
+  min_node_degree: 0
+astar_custom_params:
+  weight_factor_traffic: 1.5
+  weight_factor_distance: 1.0
+  weight_factor_time: 1.2
+  time_windows_enabled: true

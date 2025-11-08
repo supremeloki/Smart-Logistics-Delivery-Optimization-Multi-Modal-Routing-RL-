@@ -1,0 +1,224 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rl-agent-deployment
+  labels:
+    app: logistics-optimization
+    service: rl-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: logistics-optimization
+      service: rl-agent
+  template:
+    metadata:
+      labels:
+        app: logistics-optimization
+        service: rl-agent
+    spec:
+      containers:
+      - name: rl-agent-service
+        image: rl-agent-service:latest # Replace with your registry/repo:tag
+        ports:
+        - containerPort: 8001
+        env:
+        - name: ENV_CONFIG_PATH
+          value: /app/conf/environments/prod.yaml
+        - name: GNN_MODEL_PATH
+          value: /app/rl_model_registry/gcn_model.pth
+        - name: RL_CHECKPOINT_PATH
+          value: /app/rl_model_registry/prod_v2.1/checkpoint_000500
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m" # 2 CPUs
+            nvidia.com/gpu: "1" # Request one GPU
+          limits:
+            memory: "8Gi"
+            cpu: "4000m" # 4 CPUs
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/conf/environments/prod.yaml
+          subPath: prod.yaml
+        - name: model-repo-volume
+          mountPath: /app/rl_model_registry
+      volumes:
+      - name: config-volume
+        configMap:
+          name: logistics-config
+      - name: model-repo-volume
+        persistentVolumeClaim:
+          claimName: logistics-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rl-agent-service
+  labels:
+    app: logistics-optimization
+    service: rl-agent
+spec:
+  selector:
+    app: logistics-optimization
+    service: rl-agent
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: routing-service-deployment
+  labels:
+    app: logistics-optimization
+    service: routing-engine
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: logistics-optimization
+      service: routing-engine
+  template:
+    metadata:
+      labels:
+        app: logistics-optimization
+        service: routing-engine
+    spec:
+      containers:
+      - name: routing-service
+        image: routing-service:latest # Replace with your registry/repo:tag
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENV_CONFIG_PATH
+          value: /app/conf/environments/prod.yaml
+        - name: ROUTING_CONFIG_PATH
+          value: /app/conf/routing_engine_config.yaml
+        - name: OSM_PROCESSING_CONFIG_PATH
+          value: /app/conf/osm_processing_config.yaml
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m" # 1 CPU
+          limits:
+            memory: "4Gi"
+            cpu: "2000m" # 2 CPUs
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/conf/environments/prod.yaml
+          subPath: prod.yaml
+        - name: routing-config-volume
+          mountPath: /app/conf/routing_engine_config.yaml
+          subPath: routing_engine_config.yaml
+        - name: osm-config-volume
+          mountPath: /app/conf/osm_processing_config.yaml
+          subPath: osm_processing_config.yaml
+        - name: graph-data-volume
+          mountPath: /app/data_nexus/road_network_graph
+      volumes:
+      - name: config-volume
+        configMap:
+          name: logistics-config
+      - name: routing-config-volume
+        configMap:
+          name: logistics-config
+      - name: osm-config-volume
+        configMap:
+          name: logistics-config
+      - name: graph-data-volume
+        persistentVolumeClaim:
+          claimName: logistics-graph-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: routing-service
+  labels:
+    app: logistics-optimization
+    service: routing-engine
+spec:
+  selector:
+    app: logistics-optimization
+    service: routing-engine
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Example ConfigMap for environment configurations
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logistics-config
+data:
+  prod.yaml: |
+    environment: production
+    database:
+      host: logistics-db-prod
+      port: 5432
+      user: prod_user
+      password: ${{ secrets.DB_PASSWORD_PROD }} # Use Kubernetes Secrets for sensitive data
+      dbname: logistics_prod
+    redis:
+      host: logistics-redis-prod
+      port: 6379
+      db: 0
+    kafka:
+      bootstrap_servers: ['kafka-broker-1:9092', 'kafka-broker-2:9092']
+      topic_traffic_data: prod_traffic_events
+      topic_order_data: prod_order_events
+    routing_engine:
+      api_endpoint: http://routing-service:8080/route
+      osmnx_cache_dir: /app/data/road_network_graph/
+    rl_agent:
+      inference_endpoint: http://rl-agent-service:8001/predict
+      model_version: prod_v2.1
+      explore_probability: 0.05
+  routing_engine_config.yaml: |
+    graphhopper:
+      host: http://graphhopper-service:8989/
+      api_key: your_graphhopper_api_key
+      profile: car
+    astar_custom_params:
+      weight_factor_traffic: 1.5
+      weight_factor_distance: 1.0
+  osm_processing_config.yaml: |
+    osm_data:
+      pbf_path: data_nexus/raw_osm_data/tehran_iran.osm.pbf
+      bounding_box: [35.5, 51.2, 35.9, 51.7]
+      cache_dir: /app/data_nexus/road_network_graph/
+    graph_serialization:
+      output_format: gml
+      output_path: /app/data_nexus/road_network_graph/preprocessed_tehran_graph.gml
+    osmnx:
+      graph_type: drive
+      network_type: drive_service
+---
+# Example PersistentVolumeClaim for models
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logistics-models-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # Or ReadWriteMany if supported and needed
+  resources:
+    requests:
+      storage: 50Gi # Adjust size based on model storage needs
+---
+# Example PersistentVolumeClaim for graph data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logistics-graph-pvc
+spec:
+  accessModes:
+    - ReadOnlyMany # Graph data is typically read by many instances
+  resources:
+    requests:
+      storage: 10Gi # Adjust size based on graph data needs

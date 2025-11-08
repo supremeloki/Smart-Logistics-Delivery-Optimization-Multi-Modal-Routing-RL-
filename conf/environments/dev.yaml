@@ -1,0 +1,28 @@
+environments:
+  dev:
+    monitoring:
+      prometheus:
+        enabled: true
+        port: 8000
+        job_name: logistics_dev_service
+    database:
+      host: localhost
+      port: 5432
+      user: dev_user
+      password: dev_password
+      dbname: logistics_dev
+    redis:
+      host: localhost
+      port: 6379
+      db: 0
+    kafka:
+      bootstrap_servers: ['localhost:9092']
+      topic_traffic_data: dev_traffic_events
+      topic_order_data: dev_order_events
+    routing_engine:
+      api_endpoint: http://localhost:8080/route
+      osmnx_cache_dir: ./src/cache/
+    rl_agent:
+      inference_endpoint: http://localhost:8001/predict
+      model_version: dev_v1.0
+      explore_probability: 0.2

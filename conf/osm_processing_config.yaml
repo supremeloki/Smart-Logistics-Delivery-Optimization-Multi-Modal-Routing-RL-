@@ -1,0 +1,22 @@
+osm_data:
+  pbf_path: data_nexus/raw_osm_data/tehran_iran.osm.pbf
+  bounding_box: [35.5, 51.2, 35.9, 51.7] # Tehran roughly
+  cache_dir: src/cache/
+graph_serialization:
+  output_format: gml
+  output_path: data_nexus/road_network_graph/preprocessed_tehran_graph.gml
+preprocessing_steps:
+  - remove_disconnected_components
+  - simplify_graph
+  - add_travel_time_edges
+  - calculate_centrality_measures
+edge_attributes:
+  - length
+  - speed_kph
+  - travel_time
+  - traffic_factor
+node_attributes:
+  - osmid
+  - x
+  - y
+  - centrality

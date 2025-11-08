@@ -1,0 +1,34 @@
+name: CD Fleet Optimization Rollout
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker Images
+      run: |
+        docker build -f deployment_ops/docker/Dockerfile.rl_agent_service -t rl-agent-service:latest .
+        docker build -f deployment_ops/docker/Dockerfile.routing_service -t routing-service:latest .
+    - name: Push Docker Images to Registry
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - run: |
+        docker push rl-agent-service:latest
+        docker push routing-service:latest
+    - name: Deploy to Kubernetes
+      uses: 'redhat-actions/oc-login@v1' # Or any Kubernetes deployment action
+      with:
+        openshift_server_url: ${{ secrets.K8S_SERVER_URL }}
+        openshift_token: ${{ secrets.K8S_TOKEN }}
+        namespace: logistics-prod
+    - run: |
+        kubectl apply -f deployment_ops/kubernetes/k8s_logistics_deployment.yaml
+        kubectl rollout status deployment/rl-agent-deployment
+        kubectl rollout status deployment/routing-service-deployment

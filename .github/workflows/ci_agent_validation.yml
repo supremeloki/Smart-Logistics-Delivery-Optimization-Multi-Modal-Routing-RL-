@@ -1,0 +1,28 @@
+name: CI Agent Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run unit tests
+      run: |
+        pytest src/agent_brains/
+        pytest src/graph_routing_engine/
+    - name: Validate RL Agent Policy
+      run: |
+        python src/experimentation_tools/lono_rl_benchmark.py --test-mode --config conf/rl_agent_params.yaml

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.vscode/
+
+# IDEs and Editors
+.idea/
+*.swp
+*.bak
+*.swo
+
+# Data
+data_nexus/raw_osm_data/*
+data_nexus/road_network_graph/*.gml
+data_nexus/order_delivery_logs/*
+data_nexus/vehicle_telemetry_data/*
+data_nexus/simulation_scenarios/*.pkl
+*.csv
+*.json
+*.log
+
+# Models
+rl_model_registry/*
+model_checkpoints/
+mlruns/
+
+# Cache
+src/cache/
