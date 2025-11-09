@@ -257,4 +257,4 @@ If you'd like to contribute, please follow these steps:
 ## License
 
 (Optional)
-This project is licensed under the [Your License Name] License.
+This project is licensed under the Koorooush Masoumi License.
