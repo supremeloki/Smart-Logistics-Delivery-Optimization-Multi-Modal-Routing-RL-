@@ -1,28 +1,24 @@
-# Use NVIDIA CUDA base image for PyTorch with GPU support
-FROM nvidia/cuda:11.8-runtime-ubuntu20.04
+# Use Python with CUDA support for PyTorch and GPU acceleration
+FROM python:3.11-slim
 
-# Set environment variables for Python
+# Set environment variables for Python and PyTorch
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/opt/conda/bin:$PATH"
+ENV TORCH_USE_CUDA_DSA=1
 
-# Install Python 3.9 and system dependencies
+# Install system dependencies and Python development tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.9 \
-    python3.9-dev \
-    python3.9-venv \
-    python3-pip \
     build-essential \
     libxml2-dev \
     libxslt-dev \
     curl \
     git \
     wget \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create virtual environment and set it as default
-RUN python3.9 -m venv /opt/conda
-RUN /opt/conda/bin/pip install --upgrade pip setuptools wheel
+# Upgrade pip and install Python build tools
+RUN pip install --upgrade pip setuptools wheel
 
 WORKDIR /app
 
