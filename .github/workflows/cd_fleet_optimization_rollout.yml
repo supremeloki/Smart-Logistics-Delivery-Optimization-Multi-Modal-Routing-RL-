@@ -33,25 +33,30 @@ jobs:
         echo "Docker authentication will be handled during the push operation."
         # The push commands will prompt for authentication if needed
 
-    - name: Push Docker Images to Registry with Smart Authentication
+    - name: Push Docker Images with Direct Authentication
       run: |
         TAG=${{ steps.vars.outputs.image_tag }}
         REGISTRY=${{ secrets.DOCKER_USERNAME }}
+        PASSWORD=${{ secrets.DOCKER_PASSWORD }}
+        USERNAME=${{ secrets.DOCKER_USERNAME }}
 
-        # Smart authentication approach: Use credentials in push command
-        echo "Smart Docker push strategy: Authenticating during push operation"
+        echo "Direct Docker authentication and push strategy"
 
-        # Use docker buildx for advanced authentication
-        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        # Direct authentication using environment variable assignment
+        export DOCKER_PASSWORD="$PASSWORD"
+        export DOCKER_USERNAME="$USERNAME"
 
-        # Tag and push with authenticated session
+        # Use -p flag with direct password (works in CI)
+        docker login -u "$USERNAME" -p "$PASSWORD"
+
+        # Tag and push images
         docker tag rl-agent-service:$TAG $REGISTRY/rl-agent-service:$TAG
         docker push $REGISTRY/rl-agent-service:$TAG
 
         docker tag routing-service:$TAG $REGISTRY/routing-service:$TAG
         docker push $REGISTRY/routing-service:$TAG
 
-        echo "Images successfully pushed with smart authentication!"
+        echo "Images successfully pushed with direct authentication!"
         
     - name: Deploy to Kubernetes
       uses: 'redhat-actions/oc-login@v1'
