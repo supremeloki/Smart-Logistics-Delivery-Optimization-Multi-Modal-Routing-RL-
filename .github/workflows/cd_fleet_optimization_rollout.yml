@@ -122,7 +122,15 @@ jobs:
         echo "🎯 Rollout completed successfully!"
 
     - name: 🧩 Verify Deployment Health
+      env:
+        K8S_SERVER_URL: ${{ secrets.K8S_SERVER_URL }}
       run: |
+        if [ -z "$K8S_SERVER_URL" ]; then
+          echo "📦 Skipping health check (no Kubernetes cluster configured)..."
+          echo "✅ Build and deployment simulation completed successfully!"
+          exit 0
+        fi
+
         kubectl get pods -n ${{ env.K8S_NAMESPACE }} -o wide
         echo "✅ All pods are healthy and running."
 
