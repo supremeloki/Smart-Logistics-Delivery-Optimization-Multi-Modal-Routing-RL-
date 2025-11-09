@@ -1,5 +1,5 @@
 # Use a slim NVIDIA CUDA base image for PyTorch with GPU support
-FROM nvcr.io/nvidia/pytorch:23.08-py3
+FROM python:3.9-slim
 
 WORKDIR /app
 

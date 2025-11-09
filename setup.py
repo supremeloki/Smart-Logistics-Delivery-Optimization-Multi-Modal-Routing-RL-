@@ -27,7 +27,7 @@ setup(
         ],
     },
     dependency_links=[
-        "git+https://github.com/supremeloki/lono_libs.git#egg=lono_libs",
+        "https://github.com/supremeloki/lono_libs.git",
     ],
     entry_points={
         "console_scripts": [
