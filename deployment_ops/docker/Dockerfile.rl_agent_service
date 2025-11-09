@@ -23,8 +23,9 @@ RUN pip install --upgrade pip setuptools wheel
 WORKDIR /app
 
 # Copy only requirements first to leverage Docker cache
-COPY requirements-docker.txt .
-RUN pip install --no-cache-dir -r requirements-docker.txt
+COPY requirements-docker-minimal.txt .
+RUN pip install --no-cache-dir --no-deps torch torchvision torchaudio && \
+    pip install --no-cache-dir -r requirements-docker-minimal.txt
 
 # Copy the rest of the application
 COPY . .

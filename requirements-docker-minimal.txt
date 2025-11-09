@@ -1,0 +1,32 @@
+# Minimal runtime dependencies for Docker builds
+# Core ML frameworks
+torch>=2.0.0
+torch-geometric>=2.3.0
+ray[rllib]==2.7.0
+stable-baselines3
+gymnasium==0.28.1
+
+# Core data processing
+networkx>=3.0
+pandas>=2.1.1
+numpy>=1.25.2
+scipy>=1.11.2
+pyyaml>=6.0.1
+
+# Web services
+fastapi>=0.103.0
+uvicorn[standard]>=0.23.2
+pydantic>=2.4.2
+
+# Infrastructure
+kafka-python>=2.0.2
+psycopg2-binary>=2.9.9
+redis>=5.0.1
+requests>=2.31.0
+prometheus_client>=0.17.1
+aiohttp>=3.8.5
+
+# Simulation and geospatial
+simpy>=4.0.1,<5.0.0
+osmnx>=1.2.1
+pyspark>=3.5.0
