@@ -33,30 +33,32 @@ jobs:
         echo "Docker authentication will be handled during the push operation."
         # The push commands will prompt for authentication if needed
 
-    - name: Push Docker Images with Direct Authentication
+    - name: Push Docker Images with Registry Authentication
       run: |
         TAG=${{ steps.vars.outputs.image_tag }}
         REGISTRY=${{ secrets.DOCKER_USERNAME }}
         PASSWORD=${{ secrets.DOCKER_PASSWORD }}
         USERNAME=${{ secrets.DOCKER_USERNAME }}
 
-        echo "Direct Docker authentication and push strategy"
+        echo "Docker registry authentication and push strategy"
 
-        # Direct authentication using environment variable assignment
-        export DOCKER_PASSWORD="$PASSWORD"
-        export DOCKER_USERNAME="$USERNAME"
+        # Ensure registry is properly formatted
+        if [ -z "$REGISTRY" ]; then
+          echo "Error: DOCKER_USERNAME secret is not set"
+          exit 1
+        fi
 
         # Use -p flag with direct password (works in CI)
         docker login -u "$USERNAME" -p "$PASSWORD"
 
-        # Tag and push images
-        docker tag rl-agent-service:$TAG $REGISTRY/rl-agent-service:$TAG
-        docker push $REGISTRY/rl-agent-service:$TAG
+        # Tag and push images with full registry path
+        docker tag rl-agent-service:$TAG "$REGISTRY/rl-agent-service:$TAG"
+        docker push "$REGISTRY/rl-agent-service:$TAG"
 
-        docker tag routing-service:$TAG $REGISTRY/routing-service:$TAG
-        docker push $REGISTRY/routing-service:$TAG
+        docker tag routing-service:$TAG "$REGISTRY/routing-service:$TAG"
+        docker push "$REGISTRY/routing-service:$TAG"
 
-        echo "Images successfully pushed with direct authentication!"
+        echo "Images successfully pushed to registry!"
         
     - name: Deploy to Kubernetes
       uses: 'redhat-actions/oc-login@v1'
