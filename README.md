@@ -3,7 +3,10 @@
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions/workflows/ci.yml/badge.svg)](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions)
+[![CD](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions/workflows/cd_fleet_optimization_rollout.yml/badge.svg)](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-flake8-green.svg)](https://flake8.pycqa.org/)
+
+**Contact:** [kooroushmasoumi@gmail.com](mailto:kooroushmasoumi@gmail.com)
 
 This project implements an intelligent, multi-modal logistics optimization system using Deep Reinforcement Learning (DRL) and graph-based routing algorithms. The system optimizes delivery routes, fleet management, and real-time decision-making across urban environments, integrating AI-driven demand forecasting, dynamic pricing, and autonomous vehicle coordination.
 
@@ -17,6 +20,7 @@ This project implements an intelligent, multi-modal logistics optimization syste
 - 🧠 **Advanced RL Benchmarking**: Professional evaluation framework using lono_libs for comprehensive agent comparison
 - 🐳 **Production Ready**: Docker containerization and Kubernetes deployment support
 - 📈 **Monitoring & Alerting**: Integrated Slack notifications and performance metrics
+- 🔄 **CI/CD Pipeline**: Automated testing and deployment with GitHub Actions
 
 ## Key Capabilities
 
@@ -130,6 +134,7 @@ The project consists of the following modules, each performing intelligent and o
 ├── 🔄 .github/workflows/              # CI/CD pipelines
 ├── 📋 requirements.txt                # Python dependencies
 ├── 📋 requirements-dev.txt            # Development dependencies
+├── 📋 requirements-docker-core.txt    # Docker container dependencies
 ├── 🔨 setup.py                        # Package configuration
 ├── 📜 LICENSE                         # MIT License
 └── 📖 README.md                       # Project documentation
@@ -209,6 +214,7 @@ pip install -e .
 - 🧪 **Experimentation**: Check `notebooks/` and `experiment_lab/` 🧬
 - 🧠 **RL Benchmarking**: Use `src/experimentation_tools/lono_rl_benchmark.py` for comprehensive RL agent evaluation with lono_libs integration 🤖
 - 🐳 **Docker Build**: `docker build -f deployment_ops/docker/Dockerfile.rl_agent_service -t logistics-optimizer .` 🐳
+- 🔄 **CI/CD**: Automated deployment via `.github/workflows/cd_fleet_optimization_rollout.yml`
 
 ## Configuration
 
