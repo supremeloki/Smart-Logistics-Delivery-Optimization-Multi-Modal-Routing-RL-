@@ -2,8 +2,8 @@ torch>=2.0.0
 torchvision>=0.15.0
 torchaudio>=0.15.0
 ray[rllib]==2.7.0
-stable-baselines3[extra]==2.2.1
-gymnasium==0.29.1
+stable-baselines3
+gymnasium==0.28.1
 networkx>=3.0
 osmnx>=1.2.1
 fastapi>=0.103.0
