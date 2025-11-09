@@ -1,15 +1,22 @@
-# Smart Logistics & Delivery Optimization (Multi-Modal Routing + RL)
+# 🚚 Smart Logistics & Delivery Optimization (Multi-Modal Routing + RL)
+
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions/workflows/ci.yml/badge.svg)](https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-/actions)
+[![Code Quality](https://img.shields.io/badge/code%20quality-flake8-green.svg)](https://flake8.pycqa.org/)
 
 This project implements an intelligent, multi-modal logistics optimization system using Deep Reinforcement Learning (DRL) and graph-based routing algorithms. The system optimizes delivery routes, fleet management, and real-time decision-making across urban environments, integrating AI-driven demand forecasting, dynamic pricing, and autonomous vehicle coordination.
 
-## Key Features
+## ✨ Key Features
 
-- **Multi-Modal Routing**: Combines road, drone, and autonomous vehicle routing with RL optimization
-- **Real-Time Adaptation**: Dynamic route re-planning based on traffic, weather, and driver conditions
-- **Fleet Management**: EV energy optimization, driver wellbeing monitoring, and adaptive workforce allocation
-- **Scalable Architecture**: Modular design supporting distributed deployment and edge computing
-- **Data-Driven Insights**: Integrated feature store, simulation environments, and performance monitoring
-- **Advanced RL Benchmarking**: Professional evaluation framework using lono_libs for comprehensive agent comparison
+- 🚗 **Multi-Modal Routing**: Combines road, drone, and autonomous vehicle routing with RL optimization
+- 🔄 **Real-Time Adaptation**: Dynamic route re-planning based on traffic, weather, and driver conditions
+- 🚛 **Fleet Management**: EV energy optimization, driver wellbeing monitoring, and adaptive workforce allocation
+- 🏗️ **Scalable Architecture**: Modular design supporting distributed deployment and edge computing
+- 📊 **Data-Driven Insights**: Integrated feature store, simulation environments, and performance monitoring
+- 🧠 **Advanced RL Benchmarking**: Professional evaluation framework using lono_libs for comprehensive agent comparison
+- 🐳 **Production Ready**: Docker containerization and Kubernetes deployment support
+- 📈 **Monitoring & Alerting**: Integrated Slack notifications and performance metrics
 
 ## Key Capabilities
 
@@ -108,42 +115,51 @@ The project consists of the following modules, each performing intelligent and o
 └── README.md
 ```
 
-## Prerequisites
+## 🛠️ Quick Start
 
-To run this project, you will need:
+### Prerequisites
 
-*   **Python 3.8+**
-*   **Redis**: All modules utilize Redis as a Feature Store for real-time data storage and retrieval. Ensure a Redis server is running (defaults to `localhost:6379`).
-*   **Python Dependencies**:
+*   🐍 **Python 3.8+**
+*   🗄️ **Redis**: All modules utilize Redis as a Feature Store for real-time data storage and retrieval. Ensure a Redis server is running (defaults to `localhost:6379`).
+*   📦 **Python Dependencies**:
     *   `redis`
     *   `PyYAML`
     *   `numpy`
     *   `pandas`
     *   `networkx`
     *   `asyncio` (included with Python 3.7+)
-    *   `lono_libs` (for RL benchmarking and evaluation metrics)
+    *   `lono_libs` (for RL benchmarking and evaluation metrics - install via `pip install -r requirements-dev.txt`)
+
+### Installation
+
+#### Automated Setup
+```bash
+# Clone the repository
+git clone https://github.com/supremeloki/Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-.git
+cd Smart-Logistics-Delivery-Optimization-Multi-Modal-Routing-RL-
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+#### Manual Setup
+```bash
+# Install core dependencies
+pip install -r requirements.txt
+
+# Install development dependencies (optional)
+pip install -r requirements-dev.txt
+
+# Install the package in development mode
+pip install -e .
+```
 
 ## Quick Start
 
-### Automated Setup
-```bash
-# Run the automated setup script
-python scripts/setup.py --dev --test
-```
+### Running the Application
 
-### Manual Setup
-
-1. **Install Dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-    **Note**: The project uses `lono_libs` for advanced RL benchmarking and evaluation metrics. This package is automatically installed from the GitHub repository as specified in `requirements.txt`. If you encounter installation issues, you can manually install it with:
-    ```bash
-    pip install git+https://github.com/supremeloki/lono_libs.git
-    ```
-
-2. **Start Infrastructure**
+1. **Start Infrastructure**
    ```bash
    # Redis (required)
    docker run -d --name redis -p 6379:6379 redis:alpine
@@ -152,26 +168,27 @@ python scripts/setup.py --dev --test
    cd deployment_ops && docker-compose up -d
    ```
 
-3. **Configure Environment**
+2. **Configure Environment**
    - Copy `conf/environments/dev.yaml` and adjust settings
    - Configure Redis connection and API endpoints
 
-4. **Run Core Services**
+3. **Run Core Services**
    ```bash
-   # Start DRL routing engine
-   python src/graph_routing_engine/drl_predictive_router.py
+   # Start the main API server
+   uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8001
 
-   # Start fleet management (in another terminal)
-   python src/fleet_management/ev_energy_optimizer.py
+   # Or run specific modules (in separate terminals)
+   python src/routing/drl_predictive_router.py
    ```
 
 ### Development Workflow
 
-- **Testing**: `python -m pytest tests/`
-- **Linting**: `flake8 src/`
-- **Data Processing**: `python src/graph_routing_engine/osmnx_processor.py`
-- **Experimentation**: Check `notebooks/` and `experiment_lab/`
-- **RL Benchmarking**: Use `src/experimentation_tools/lono_rl_benchmark.py` for comprehensive RL agent evaluation with lono_libs integration
+- ✅ **Testing**: `python -m pytest tests/ -v`
+- 🔍 **Linting**: `flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics`
+- 📊 **Data Processing**: `python src/routing/osmnx_processor.py`
+- 🧪 **Experimentation**: Check `notebooks/` and `experiment_lab/`
+- 🧠 **RL Benchmarking**: Use `src/experimentation_tools/lono_rl_benchmark.py` for comprehensive RL agent evaluation with lono_libs integration
+- 🐳 **Docker Build**: `docker build -f deployment_ops/docker/Dockerfile.rl_agent_service -t logistics-optimizer .`
 
 ## Configuration
 
