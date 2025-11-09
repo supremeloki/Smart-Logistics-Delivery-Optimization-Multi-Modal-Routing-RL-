@@ -23,8 +23,8 @@ RUN pip install --upgrade pip setuptools wheel
 WORKDIR /app
 
 # Copy only requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
 
 # Copy the rest of the application
 COPY . .

@@ -22,9 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements first to leverage Docker cache
-COPY requirements.txt .
+COPY requirements-docker.txt .
 RUN pip install --no-cache-dir --no-deps torch torchvision torchaudio && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-docker.txt
 
 # Copy the entire application code
 COPY . .
