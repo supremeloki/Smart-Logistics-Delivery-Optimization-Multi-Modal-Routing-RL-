@@ -78,41 +78,61 @@ The project consists of the following modules, each performing intelligent and o
     *   Leverages medical imaging AI for scan interpretation and NLP for symptom extraction.
     *   Identifies potential conditions and provides diagnostic and treatment recommendations based on medical guidelines.
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-.
-├── conf/                           # Configuration files
-│   ├── environments/               # Environment-specific configs (dev, prod)
-│   ├── osm_processing_config.yaml  # OSM data processing settings
-│   └── routing_engine_config.yaml  # Routing engine parameters
-├── data_nexus/                     # Data ingestion and simulation
-│   ├── raw_osm_data/               # Raw OpenStreetMap data
-│   ├── road_network_graph/         # Processed graph data
-│   └── simulation_scenarios/       # Fleet simulation environments
-├── deployment_ops/                 # Deployment configurations
-│   ├── docker/                     # Docker containers for services
-│   └── kubernetes/                 # K8s manifests
-├── docs/                           # Documentation
-├── experiment_lab/                 # Experimentation and analysis tools
-├── notebooks/                      # Jupyter notebooks for analysis
-├── rl_model_registry/              # Model versioning and storage
-├── scripts/                        # Utility scripts (setup, data processing)
-├── src/                            # Source code
-│   ├── cache/                      # Runtime cache files
-│   ├── graph_routing_engine/       # DRL-based routing algorithms
-│   ├── fleet_management/           # Fleet optimization and EV management
-│   ├── autonomous_systems/         # AV control interfaces
-│   ├── demand_forecasting/         # AI demand prediction models
-│   ├── traffic_prediction/         # Real-time traffic forecasting
-│   ├── economic_optimization/      # Dynamic pricing and incentives
-│   ├── human_interface/            # Dashboards and AR interfaces
-│   └── ...                         # Additional domain modules
-├── tests/                          # Test suites (unit, integration)
-├── .github/workflows/              # CI/CD pipelines
-├── requirements.txt                # Python dependencies
-├── setup.py                        # Package configuration
-└── README.md
+📂 project-root/
+├── ⚙️ conf/                           # Configuration files
+│   ├── 🌍 environments/               # Environment-specific configs (dev, prod)
+│   ├── 🗺️ osm_processing_config.yaml   # OSM data processing settings
+│   └── 🚗 routing_engine_config.yaml   # Routing engine parameters
+├── 🗄️ data_nexus/                     # Data ingestion and simulation
+│   ├── 🌐 raw_osm_data/                # Raw OpenStreetMap data
+│   ├── 🛣️ road_network_graph/          # Processed graph data
+│   └── 🎭 simulation_scenarios/        # Fleet simulation environments
+├── 🚀 deployment_ops/                 # Deployment configurations
+│   ├── 🐳 docker/                      # Docker containers for services
+│   └── ☸️ kubernetes/                  # K8s manifests
+├── 📚 docs/                           # Documentation
+├── 🧪 experiment_lab/                 # Experimentation and analysis tools
+├── 📓 notebooks/                      # Jupyter notebooks for analysis
+├── 🤖 rl_model_registry/              # Model versioning and storage
+├── 🔧 scripts/                        # Utility scripts (setup, data processing)
+├── 💻 src/                            # Source code
+│   ├── 💾 cache/                       # Runtime cache files
+│   ├── 🧠 core/                        # Core orchestration and quantum optimization
+│   ├── 🎯 core_orchestrator/           # Multi-agent RL orchestration
+│   ├── 🗃️ data_access/                 # Database and telemetry management
+│   ├── 🌐 data_nexus/                  # Data processing and anomaly detection
+│   ├── 🚀 deployment_core/             # Deployment and inference optimization
+│   ├── 👨‍🚗 driver_management/          # Driver wellbeing monitoring
+│   ├── 🚁 drone_operations/            # Autonomous drone dispatching
+│   ├── 💰 economic_incentive_engine/   # Dynamic pricing and incentives
+│   ├── 🌐 edge_computing/              # Real-time IoT processing
+│   ├── ⚖️ ethical_ai/                   # Bias detection and mitigation
+│   ├── ⚙️ feature_engineering/         # Feature generation and store client
+│   ├── 🏭 fleet_simulator/             # Fleet simulation utilities
+│   ├── 🛣️ graph_routing/               # DRL-based graph routing
+│   ├── 🏥 healthcare/                   # AI-driven diagnosis
+│   ├── 🖥️ interfaces/                   # AR dashboards and AV control
+│   ├── 🎓 learning/                    # Federated learning and RL training
+│   ├── 🤖 ml_ops/                      # ML operations and retraining
+│   ├── 📊 monitoring/                  # Alert and notification systems
+│   ├── ⚙️ operations/                  # Quality control and traceability
+│   ├── 💰 optimization/                # Pricing and prediction engines
+│   ├── 🛣️ routing/                     # Routing algorithms and API clients
+│   ├── 🏙️ routing_engine/              # Quantum path optimization
+│   ├── 🏙️ smart_city/                  # Public safety systems
+│   ├── 🌊 stream_processing/           # Kafka consumers and producers
+│   ├── 🛠️ utils/                       # Common helpers and validators
+│   └── ...                             # Additional domain modules
+├── ✅ tests/                          # Test suites (unit, integration)
+├── 🔄 .github/workflows/              # CI/CD pipelines
+├── 📋 requirements.txt                # Python dependencies
+├── 📋 requirements-dev.txt            # Development dependencies
+├── 🔨 setup.py                        # Package configuration
+├── 📜 LICENSE                         # MIT License
+└── 📖 README.md                       # Project documentation
 ```
 
 ## 🛠️ Quick Start
