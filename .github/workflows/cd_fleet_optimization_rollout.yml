@@ -46,8 +46,15 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        docker login --username "$DOCKER_USERNAME" --password-stdin <<< "$DOCKER_PASSWORD"
-        echo "🔓 Docker authentication successful."
+        set -e
+        if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
+          echo "⚠️ Warning: Docker credentials not found in GitHub Secrets."
+          echo "🌀 Proceeding without authentication (public access mode)..."
+        else
+          echo "🔑 Logging in to Docker registry..."
+          echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+          echo "✅ Docker authentication successful."
+        fi
 
     - name: 📦 Tag & Push Docker Images
       env:
