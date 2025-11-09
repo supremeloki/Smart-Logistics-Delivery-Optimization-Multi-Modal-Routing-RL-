@@ -8,6 +8,12 @@ import random
 import pandas as pd
 import numpy as np
 
+import sys
+import os
+
+# Add the parent directory to the Python path to enable relative imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from data_nexus.simulation_scenarios.simpy_delivery_environment import SimpyDeliveryEnvironment
 from routing.astar_optimization_logic import AStarRouting
 from learning.multi_agent_rl_policy import MultiAgentPolicyContainer
