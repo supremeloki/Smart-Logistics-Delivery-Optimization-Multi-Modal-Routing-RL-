@@ -1,9 +1,13 @@
-# Use an official lightweight Python image
+# Use lightweight Python base image for routing service
 FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-# Install system dependencies for osmnx (geospatial)
+# Install system dependencies for osmnx and geospatial libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libxml2-dev \
@@ -12,32 +16,35 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     graphviz \
     libspatialindex-dev \
+    libgeos-dev \
+    proj-bin \
+    libproj-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first
+# Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire application code
 COPY . .
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
+# Environment variables for the routing service
 ENV ENV_CONFIG_PATH=/app/conf/environments/prod.yaml
 ENV OSM_PROCESSING_CONFIG_PATH=/app/conf/osm_processing_config.yaml
 ENV ROUTING_CONFIG_PATH=/app/conf/routing_engine_config.yaml
 
-# Ensure graph data directory exists and preprocess graph if not present
-RUN mkdir -p /app/data_nexus/road_network_graph
-# This step is heavy; in production, pre-baked image with graph or volume mount is preferred
-# For robustness, we can try to generate it if missing, but it's very slow in Docker build
-# RUN python src/graph_routing_engine/osmnx_processor.py --config $OSM_PROCESSING_CONFIG_PATH
+# Create necessary directories
+RUN mkdir -p /app/data_nexus/road_network_graph /app/logs
+
+# Pre-create graph directory structure (actual graph generation happens at runtime or via volume mount)
+# Note: Graph generation is expensive, so in production this should be pre-built or mounted
 
 # Expose port for the routing API
 EXPOSE 8080
 
+# Health check for routing service
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
 # Command to run the FastAPI routing service
-# Note: The `optimization_api.py` serves both routing and RL optimization
-# This Dockerfile can either run the main API or a dedicated routing API if split.
-# Assuming optimization_api.py handles /route.
-CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8080"]
+CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8080 --workers 2"]

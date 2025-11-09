@@ -1,45 +1,51 @@
-# Use a slim NVIDIA CUDA base image for PyTorch with GPU support
-FROM python:3.9-slim
+# Use NVIDIA CUDA base image for PyTorch with GPU support
+FROM nvidia/cuda:11.8-runtime-ubuntu20.04
 
-WORKDIR /app
+# Set environment variables for Python
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/opt/conda/bin:$PATH"
 
-# Install system dependencies if any, e.g., for geospatial libraries
+# Install Python 3.9 and system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.9 \
+    python3.9-dev \
+    python3.9-venv \
+    python3-pip \
     build-essential \
     libxml2-dev \
     libxslt-dev \
     curl \
     git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment and set it as default
+RUN python3.9 -m venv /opt/conda
+RUN /opt/conda/bin/pip install --upgrade pip setuptools wheel
+
+WORKDIR /app
 
 # Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN /opt/conda/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
-ENV SUMO_HOME=/usr/share/sumo 
-ENV KMP_DUPLICATE_LIB_OK=TRUE 
+# Environment variables for the application
+ENV SUMO_HOME=/usr/share/sumo
+ENV KMP_DUPLICATE_LIB_OK=TRUE
 ENV ENV_CONFIG_PATH=/app/conf/environments/prod.yaml
 ENV GNN_MODEL_PATH=/app/rl_model_registry/gcn_model.pth
 ENV RL_CHECKPOINT_PATH=/app/rl_model_registry/prod_v2.1/checkpoint_000500
 
-# Expose port for FastAPI or Triton inference server
+# Expose port for FastAPI
 EXPOSE 8001
 
-# Command to run the Triton Inference Server with RL Agent and GNN models
-# This assumes Triton server is installed in the base image or separately
-# and that `model_repo` contains the exported models for Triton.
-# If using TorchServe, the command would be different.
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
 
-# Example with Triton:
-# Entrypoint would typically be triton's start script.
-# This Dockerfile focuses on building the environment.
-# Triton inference server itself is usually run in a separate container.
-# This container could host the FastAPI optimization_api, which then calls Triton.
-
-# For direct FastAPI deployment:
-CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8001"]
+# Default command - can be overridden for different services
+CMD ["sh", "-c", "uvicorn src.deployment_core.optimization_api:app --host 0.0.0.0 --port 8001 --workers 4"]
