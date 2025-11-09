@@ -69,20 +69,40 @@ jobs:
         echo "✅ Local build completed successfully!"
 
     - name: 🌐 Login to Kubernetes Cluster
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: ${{ secrets.K8S_SERVER_URL }}
-        openshift_token: ${{ secrets.K8S_TOKEN }}
-        namespace: ${{ env.K8S_NAMESPACE }}
+      env:
+        K8S_SERVER_URL: ${{ secrets.K8S_SERVER_URL }}
+        K8S_TOKEN: ${{ secrets.K8S_TOKEN }}
+      run: |
+        set -e
+        if [ -z "$K8S_SERVER_URL" ] || [ -z "$K8S_TOKEN" ]; then
+          echo "⚠️ Warning: Kubernetes credentials not found in GitHub Secrets."
+          echo "🌀 Skipping Kubernetes deployment (development/testing mode)..."
+          echo "📝 To enable deployment, set K8S_SERVER_URL and K8S_TOKEN secrets"
+          exit 0
+        else
+          echo "🔑 Logging in to Kubernetes cluster..."
+          # Note: Using oc command directly instead of action for better control
+          oc login "$K8S_SERVER_URL" --token="$K8S_TOKEN"
+          oc project ${{ env.K8S_NAMESPACE }}
+          echo "✅ Kubernetes authentication successful."
+        fi
 
     - name: ⚙️ Deploy to Kubernetes
       env:
         K8S_NAMESPACE: ${{ env.K8S_NAMESPACE }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         REGISTRY: ${{ env.REGISTRY }}
+        K8S_SERVER_URL: ${{ secrets.K8S_SERVER_URL }}
       run: |
         set -e
         TAG=${{ steps.vars.outputs.image_tag }}
+
+        if [ -z "$K8S_SERVER_URL" ]; then
+          echo "📦 Skipping Kubernetes deployment (no cluster configured)..."
+          echo "✅ Build and test completed successfully!"
+          echo "🔧 Configure K8S_SERVER_URL secret to enable deployment"
+          exit 0
+        fi
 
         # Use local images for development/testing
         IMAGE_RL_AGENT=rl-agent-service:$TAG
