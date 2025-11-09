@@ -12,47 +12,64 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
     - name: Set Image Tag
-      run: echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      id: vars
+      run: echo "image_tag=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
 
     - name: Build Docker Images
       run: |
-        docker build -f deployment_ops/docker/Dockerfile.rl_agent_service -t rl-agent-service:${{ env.IMAGE_TAG }} .
-        docker build -f deployment_ops/docker/Dockerfile.routing_service -t routing-service:${{ env.IMAGE_TAG }} .
+        TAG=${{ steps.vars.outputs.image_tag }}
+        docker build -f deployment_ops/docker/Dockerfile.rl_agent_service -t rl-agent-service:$TAG .
+        docker build -f deployment_ops/docker/Dockerfile.routing_service -t routing-service:$TAG .
 
-    - name: Push Docker Images
+    - name: Authenticate to Docker Registry
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        TAG=${{ env.IMAGE_TAG }}
-        USERNAME=${{ secrets.DOCKER_USERNAME }}
-        PASSWORD=${{ secrets.DOCKER_PASSWORD }}
-        REGISTRY=docker.io/$USERNAME
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-        echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-
-        docker tag rl-agent-service:$TAG $REGISTRY/rl-agent-service:$TAG
-        docker push $REGISTRY/rl-agent-service:$TAG
-
-        docker tag routing-service:$TAG $REGISTRY/routing-service:$TAG
-        docker push $REGISTRY/routing-service:$TAG
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-
-    - name: Kubernetes Login
+    - name: Tag & Push Docker Images
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-        kubectl config set-cluster cluster --server=${{ secrets.K8S_SERVER_URL }} --insecure-skip-tls-verify=true
-        kubectl config set-credentials github --token=${{ secrets.K8S_TOKEN }}
-        kubectl config set-context default --cluster=cluster --user=github --namespace=${{ env.K8S_NAMESPACE }}
-        kubectl config use-context default
+        TAG=${{ steps.vars.outputs.image_tag }}
+        docker tag rl-agent-service:$TAG $DOCKER_USERNAME/rl-agent-service:$TAG
+        docker push $DOCKER_USERNAME/rl-agent-service:$TAG
 
-    - name: Apply and Rollout
+        docker tag routing-service:$TAG $DOCKER_USERNAME/routing-service:$TAG
+        docker push $DOCKER_USERNAME/routing-service:$TAG
+
+        echo "✅ Docker images pushed successfully!"
+
+    - name: Login to Kubernetes Cluster
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: ${{ secrets.K8S_SERVER_URL }}
+        openshift_token: ${{ secrets.K8S_TOKEN }}
+        namespace: ${{ env.K8S_NAMESPACE }}
+
+    - name: Deploy Updated Images to Kubernetes
+      env:
+        K8S_NAMESPACE: ${{ env.K8S_NAMESPACE }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-        kubectl apply -f deployment_ops/kubernetes/k8s_logistics_deployment.yaml
+        TAG=${{ steps.vars.outputs.image_tag }}
+        IMAGE_RL_AGENT=$DOCKER_USERNAME/rl-agent-service:$TAG
+        IMAGE_ROUTING_SERVICE=$DOCKER_USERNAME/routing-service:$TAG
 
-        kubectl set image deployment/rl-agent-deployment rl-agent-container=${{ secrets.DOCKER_USERNAME }}/rl-agent-service:${{ env.IMAGE_TAG }} -n ${{ env.K8S_NAMESPACE }}
-        kubectl rollout status deployment/rl-agent-deployment -n ${{ env.K8S_NAMESPACE }}
+        echo "Applying Kubernetes manifests..."
+        kubectl apply -f deployment_ops/kubernetes/k8s_logistics_deployment.yaml -n $K8S_NAMESPACE
 
-        kubectl set image deployment/routing-service-deployment routing-service-container=${{ secrets.DOCKER_USERNAME }}/routing-service:${{ env.IMAGE_TAG }} -n ${{ env.K8S_NAMESPACE }}
-        kubectl rollout status deployment/routing-service-deployment -n ${{ env.K8S_NAMESPACE }}
+        echo "Updating container images..."
+        kubectl set image deployment/rl-agent-deployment rl-agent-container=$IMAGE_RL_AGENT -n $K8S_NAMESPACE
+        kubectl set image deployment/routing-service-deployment routing-service-container=$IMAGE_ROUTING_SERVICE -n $K8S_NAMESPACE
+
+        echo "Waiting for rollouts..."
+        kubectl rollout status deployment/rl-agent-deployment -n $K8S_NAMESPACE
+        kubectl rollout status deployment/routing-service-deployment -n $K8S_NAMESPACE
+
+        echo "🚀 Deployment successful!"
