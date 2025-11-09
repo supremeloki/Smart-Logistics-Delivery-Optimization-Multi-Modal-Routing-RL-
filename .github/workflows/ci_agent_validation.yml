@@ -21,8 +21,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run unit tests
       run: |
-        pytest src/learning/
-        pytest src/graph_routing/
+        pytest tests/
     - name: Validate RL Agent Policy
       run: |
         python src/experimentation_tools/lono_rl_benchmark.py --test-mode --config conf/rl_agent_params.yaml
