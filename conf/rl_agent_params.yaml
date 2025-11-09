@@ -12,7 +12,7 @@ multi_agent_config:
       action_space: [10]
   policy_mapping_fn:
     type: custom
-    module: src.agent_brains.multi_agent_rl_policy
+    module: src.learning.multi_agent_rl_policy
     function: map_agent_to_policy
 training_params:
   gamma: 0.99

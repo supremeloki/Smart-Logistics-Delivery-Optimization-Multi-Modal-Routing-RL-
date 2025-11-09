@@ -272,16 +272,14 @@ astar_custom_params:
                     continue
 
     @patch('src.utils.metrics_collector.MetricsCollector._instance', None)
-    @patch('src.core_orchestrator.orchestrator.AStarRouting')
     @patch('src.core_orchestrator.orchestrator.AgentManager')
     @patch('src.stream_processing.spark_kafka_consumer.SparkKafkaConsumer')
     @patch('src.data_nexus.realtime_telemetry_aggregator.RealtimeTelemetryAggregator')
     @patch('src.data_nexus.database_manager.DatabaseManager')
     @patch('src.feature_forge.feature_store_client.FeatureStoreClient')
     @patch('src.monitoring.alert_manager.AlertManager')
-    @patch('pyspark.sql.SparkSession')
     @patch('redis.StrictRedis')
-    def test_orchestrator_mock_basic(self, mock_redis, mock_spark_session, mock_alert, mock_feature_store, mock_db, mock_telemetry, mock_spark, mock_agent, mock_routing):
+    def test_orchestrator_mock_basic(self, mock_redis, mock_alert, mock_feature_store, mock_db, mock_telemetry, mock_spark, mock_agent):
         """Test basic orchestrator functionality with full mocking."""
         # Mock the Redis client to prevent connection attempts
         mock_redis_instance = Mock()
@@ -297,13 +295,7 @@ astar_custom_params:
         mock_redis_instance.execute.return_value = None
         mock_redis_instance.scan_iter.return_value = []
 
-        # Mock SparkSession to prevent Hadoop initialization
-        mock_spark_session_instance = Mock()
-        mock_spark_session.return_value = mock_spark_session_instance
-        mock_spark_session_instance.builder = Mock()
-        mock_spark_session_instance.builder.appName.return_value = Mock()
-        mock_spark_session_instance.builder.appName.return_value.config.return_value = Mock()
-        mock_spark_session_instance.builder.appName.return_value.config.return_value.getOrCreate.return_value = Mock()
+        # Note: SparkSession mocking removed from decorators since PySpark is now available as dependency
 
         from src.core_orchestrator.orchestrator import Orchestrator
 
@@ -323,7 +315,7 @@ astar_custom_params:
         mock_spark_instance.process_order_data.return_value = Mock()
         mock_spark_instance.spark = Mock()
 
-        mock_spark_session.builder.appName.return_value.config.return_value.getOrCreate.return_value = Mock()
+        # Note: SparkSession mocking removed from decorators since PySpark is now a dependency
 
         mock_feature_store_instance = Mock()
         mock_feature_store.return_value = mock_feature_store_instance
@@ -336,8 +328,7 @@ astar_custom_params:
         mock_agent_instance.osm_processor = Mock()
         mock_agent_instance.osm_processor.get_graph.return_value = Mock()
 
-        mock_routing_instance = Mock()
-        mock_routing.return_value = mock_routing_instance
+        # Note: AStarRouting is mocked at the orchestrator level, so no need to set up mock_routing_instance
 
         # Create orchestrator with test config
         orchestrator = Orchestrator(self.config_path)
